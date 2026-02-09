@@ -1,0 +1,535 @@
+---
+title: "Assignment 1"
+author: "Alex Holwill"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+Github repository URL:
+
+```{r}
+#| echo: True
+# Practical 1 Questions
+# Question 1 
+
+data(airquality)
+which(is.na(airquality))
+
+
+
+```
+
+```{r}
+#| echo: True
+# Question 2
+
+mean(airquality$Temp)
+sd(airquality$Temp)
+min(airquality$Temp)
+max(airquality$Temp)
+
+mean(airquality$Ozone, na.rm = TRUE)
+sd(airquality$Ozone, na.rm = TRUE)
+min(airquality$Ozone, na.rm = TRUE)
+max(airquality$Ozone, na.rm = TRUE)
+
+
+```
+
+```{r}
+#| echo: True
+# Question 3
+
+data(cars)
+
+X = cars$speed
+Y = cars$dist
+
+X_1 = cbind(1, X) 
+
+B = solve((t(X_1)%*%X_1))%*%t(X_1)%*%Y
+B
+```
+
+```{r}
+#| echo: True
+# Question 4
+
+lm(Y ~ X)
+
+
+```
+
+Question 4
+
+```{r}
+#| echo: True
+# Day 3 Practical Questions 4 and 5
+# Question 4
+
+x_values <- runif(1000, min = -2, max = 2) # -2 <= x <= 2
+f <- sin(x_values)
+plot(x_values,
+     f, 
+     cex = 0.5, #making circle size smaller
+     pch = 16, # co-ordinates plotted as a closed circle
+     xlab = 'x', # re-labelling axes
+     ylab = 'y',
+     col = 'red' # plotted co-ordinates are now red
+     )
+
+
+```
+
+```{r}
+#| echo: True
+# Question 5
+
+t_data <- rt(1000, 1)
+y <- sort(t_data)
+
+
+n_data_sorted <- replicate(1000, sort(rnorm(1000)))
+x <- rowMeans(n_data_sorted)
+
+lower <- apply(n_data_sorted, 1, quantile, probs = 0.025)
+upper <- apply(n_data_sorted, 1, quantile, probs = 0.975)
+
+plot(x, y,
+     pch = 16, cex = 0.5,
+     xlab = "norm quantiles",
+     ylab = "t-values",
+     main = "QQ plot",
+     xlim = c(-5, 5),
+     ylim = c(-5, 5))
+lines(x, lower, lty = 2, col='blue') # lower envelope
+lines(x, upper, lty = 2, col='blue') # upper envelope
+```
+
+```{r}
+#| echo: True
+# Practical 4
+# Setup
+
+# Install tidyverse if not already installed
+if (!requireNamespace("tidyverse", quietly = TRUE)) {
+  install.packages("tidyverse")
+}
+library(tidyverse)
+
+# Install and load nycflights13 for flight data
+if (!requireNamespace("nycflights13", quietly = TRUE)) {
+  install.packages("nycflights13")
+}
+library(nycflights13)
+```
+
+```{r}
+#| echo: True
+# Question 1
+
+df <- flights
+class(df) #checking class
+
+df <- as_tibble(df)
+class(df) #changed to tibble, in our case it was already a tibble so unnecessary
+
+head(df)
+```
+
+```{r}
+#| echo: True
+# Question 2
+
+flights %>%
+  filter(month == 1) %>%
+  group_by(carrier) %>%
+  summarise(
+    mean_distance = mean(distance, na.rm = TRUE),
+    sd_distance = sd(distance, na.rm = TRUE)
+  ) %>%
+  arrange(mean_distance)
+```
+
+```{r}
+#| echo: True
+# Question 3
+
+carrier_oo = df %>%
+  filter(carrier == 'OO', month == 1)
+
+carrier_oo$distance
+class(carrier_oo$distance)
+
+length(carrier_oo$distance)
+
+sd(carrier_oo$distance)
+
+carrier_YV = df %>%
+  filter(carrier == 'YV', month == 1)
+
+carrier_YV$distance
+class(carrier_YV$distance)
+
+length(carrier_YV$distance)
+
+sd(carrier_YV$distance)
+```
+
+The standard deviation is NA for carrier OO because the length of the distance vector for January is 1, and using the built in 'sd' command returns NA for 1 and 0 length vector, mathematically, we are using the sample standard deviation formula, which in the denominator has n-1, therefore with one observation we will have 1-1 = 0 in the denominator, dividing by 0, which is undefined.
+
+The standard deviation is 0 for a carrier (e.g. YV) would mean that for all the values are the same, in this case 229. All values the same implies no variation.
+
+```{r}
+#| echo: True
+# Question 4
+
+data(flights)
+flights <- as.tibble(flights)
+
+# piping flights by carrier, then for each carrier calculating the average departure delay
+flights %>%
+  group_by(carrier) %>%
+  summarise(
+    mean_dep_delay = mean(dep_delay, na.rm = TRUE)
+  ) %>%
+  arrange(mean_dep_delay) %>%
+# getting the carriers along the columns and rows the average departure delay
+  pivot_wider(
+    names_from = carrier,
+    values_from = mean_dep_delay
+  )
+```
+
+```{r}
+#| echo: True
+# Question 5
+
+# filtering by delay > 0 and arrival <= 0 
+delayed_and_arrived_on_time <- flights %>%
+  filter(dep_delay > 0,
+         arr_delay <= 0
+  )
+
+number_of_flights_delayed_and_arrived_on_time <- nrow(delayed_and_arrived_on_time)
+number_of_flights <- nrow(flights)
+number_of_flights_delayed_and_arrived_on_time / number_of_flights
+
+```
+
+```{r}
+#| echo: True
+# Question 6
+# Part 1
+
+data(airlines)
+data(flights)
+
+# making a routes variable, 'origin' + 'dest', calculating the number of different carriers per route
+flights %>%
+  mutate(routes = str_c(origin, dest, sep = " ")) %>%
+  group_by(routes) %>%
+  summarise(
+    n_airlines = n_distinct(carrier),
+  ) %>%
+  filter(n_airlines > 1) %>%
+  arrange((n_airlines))
+
+```
+
+```{r}
+#| echo: True
+# Question 6
+# Part 2
+
+flights_routes <- flights %>%
+  mutate(routes = str_c(origin, dest, sep = "-"))
+
+multi_airline_routes <- flights_routes %>%
+  group_by(routes) %>%
+  filter(n_distinct(carrier) > 1)
+
+avg_delays <- multi_airline_routes %>%
+  group_by(routes, carrier) %>%
+  summarise(
+    avg_arr_delay = mean(arr_delay, na.rm = TRUE),
+    .groups = "drop"
+  ) 
+
+avg_delays
+
+```
+
+```{r}
+#| echo: True
+# Question 6
+# Part 3
+
+best_worst_arrival_airlines <- avg_delays %>%
+  group_by(routes) %>%
+  summarise(
+    best_airline = carrier[which.min(avg_arr_delay)],
+    worst_airline = carrier[which.max(avg_arr_delay)]
+  )
+
+best_worst_arrival_airlines
+
+```
+
+```{r}
+#| echo: True
+# Question 6
+# Part 4
+
+best_worst_arrival_times <- avg_delays %>%
+  group_by(routes) %>%
+  summarise(
+    best_airline = min(avg_arr_delay),
+    worst_airline = max(avg_arr_delay),
+    difference = worst_airline - best_airline
+  ) %>%
+  mutate(flight_id = row_number())
+
+best_worst_arrival_times$routes[which.max(best_worst_arrival_times$difference)]
+```
+
+```{r}
+#| echo: True
+# Question 6
+# Part 5
+
+# carrier-level average delays on JFK-ATL
+route_carrier_delays <- avg_delays %>%
+  filter(routes == "JFK-ATL")
+
+# simple bar plot: airlines vs average arrival delay
+barplot(
+  route_carrier_delays$avg_arr_delay,
+  names.arg = route_carrier_delays$carrier,
+  horiz = TRUE,
+  xlab = "Average delay (minutes)",
+  ylab = "Carriers",
+  main = "Average delay by airline on JFK-ATL"
+)
+
+```
+
+From the plot above, it can be the seen that the other 2 carriers average delay was way less, approximately under 10 minutes, from this I assume that the delay on this route was so great due to some exterior circumstances, i.e. a technical malfunction or medical emergency.
+
+```{r}
+#| echo: True
+# Question 7
+
+# loading dataset using code given in question
+
+df <- structure(list(id = c("id_1", "id_2", "id_3", "id_4", "id_5", 
+"id_6", "id_7", "id_8", "id_9", "id_10", "id_11", "id_12", "id_13", 
+"id_14", "id_15", "id_16", "id_17", "id_18", "id_19", "id_20", 
+"id_21", "id_22", "id_23", "id_24", "id_25", "id_26", "id_27", 
+"id_28", "id_29", "id_30", "id_31", "id_32", "id_33", "id_34", 
+"id_35", "id_36", "id_37", "id_38", "id_39", "id_40", "id_41", 
+"id_42", "id_43", "id_44", "id_45", "id_46", "id_47", "id_48", 
+"id_49", "id_50"), age = c(50L, 34L, 70L, 33L, 22L, 61L, 69L, 
+73L, 62L, 56L, 71L, 33L, 73L, 44L, 45L, 46L, 24L, 70L, 46L, 76L, 
+47L, 76L, 28L, 48L, 54L, 27L, 45L, 26L, 61L, 28L, 38L, 55L, 33L, 
+36L, 62L, 58L, 72L, 31L, 34L, 51L, 61L, 64L, 26L, 28L, 60L, 29L, 
+42L, 46L, 79L, 72L), gender = c("male", "male", "male", "female", 
+"female", "male", "female", "male", "male", "female", "female", 
+"male", "male", "female", "male", "male", "male", "male", "female", 
+"male", "male", "male", "male", "female", "femal", "male", "female", 
+"female", "female", "female", "male", "female", "female", "female", 
+"male", "male", "female", "male", "female", "female", "male", 
+"female", "female", "male", "male", "female", "male", "male", 
+"male", "female"), height = c(174.4, 197.7, 174.1, 194.5, NA, 
+180.4, 170.5, 157.4, 196.8, 165.1, 153, 197.4, 186, 157.1, 177.5, 
+197.7, 179.3, 170.2, 182.4, NA, 165.4, 161, 168.5, 199.2, 157.7, 
+154.6, 157.1, 184.5, 181, 194.6, 183.6, 186.9, 176.1, 183, 191.1, 
+189.3, 199, 172, 165.6, 170.5, 150.5, 159.2, 192.1, 161.6, 162, 
+153.8, 162.3, 186.6, 192.4, 174.9), weight = c(69.4, 62.3, 55.6, 
+69.5, 78.6, 60.8, 72.2, 60.9, 75.1, 67.7, 82.5, 68.7, 67.8, 76.7, 
+87, 61.1, 70.6, 63.3, 81.5, 59.2, 93.2, 87.3, 83.4, 80.9, 68.6, 
+76.5, 93.7, 79.1, 92, 65.6, 85.4, 63.3, 79.7, 74.1, 63.3, 78.2, 
+95.7, 95.1, 63.7, 66.1, 99.3, 81, 96.9, 73.3, 70.3, 83, 57.6, 
+78.6, 61.9, 98.1), blood_type = c("O", "A", "O", "O", "B", "AB", 
+"O", "O", "O", "AB", "A", "O", "O", "O", "B", "A", "B", "AB", 
+"O", "AB", "A", "AB", "O", "B", "A", "A", "B", "AB", "A", "B", 
+"B", "A", "O", "O", "O", "B", "O", "A", "A", "B", "A", "O", "AB", 
+"A", "A", "O", "O", "B", "A", "O"), disease_status = c("diseased", 
+"healthy", "healthy", "healthy", "healthy", "healthy", "diseased", 
+"healthy", "diseased", "Healthy", "diseased", "healthy", "diseased", 
+"healthy", "diseased", "healthy", "healthy", "healthy", "healthy", 
+"healthy", "healthy", "diseased", "healthy", "diseased", "healthy", 
+"healthy", "healthy", "healthy", "diseased", "diseased", "healthy", 
+"healthy", "healthy", "diseased", "diseased", "diseased", "healthy", 
+"diseased", "healthy", "healthy", "healthy", "healthy", "healthy", 
+"diseased", "diseased", "diseased", "healthy", "healthy", "diseased", 
+"diseased"), cholesterol = c(228, 223, 213, 198, 166, 151, 195, 
+199, 189, 196, 221, 156, 185, 230, 234, 174, 185, 236, 235, 180, 
+165, 220, 160, 153, 250, 153, 184, 242, 212, 179, 224, 233, 181, 
+199, 220, 214, 214, 248, 191, 162, 203, 173, 199, 187, 248, 189, 
+173, 212, 164, 247), glucose = c(96, 78, 101, 119, 103, 91, 86, 
+NA, 77, 80, 115, 85, 88, 109, NA, 71, 90, 94, 91, 87, 113, 93, 
+97, 118, 109, 80, 85, 119, 99, 108, 89, 108, 97, 116, 79, 84, 
+75, 81, 119, NA, 106, 109, 75, 82, 84, 75, 76, 120, 119, 77), 
+    smoker = c("yes", "yes", "yes", "yes", "no", "yes", "no", 
+    "yes", "no", "no", "no", "no", "no", "yes", "no", "yes", 
+    "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "no", 
+    "no", "yes", "yes", "yes", "no", "no", "yes", "no", "yes", 
+    "no", "yes", "no", "yes", "yes", "yes", "no", "no", "yes", 
+    "no", "no", "no", "no", "no", "no", "yes"), exercise = c("occasional", 
+    "regular", "occasional", "regular", "none", "occasional", 
+    "regular", "none", "occasional", "none", "occasional", "none", 
+    "none", "regular", "occasional", "none", "regular", "regular", 
+    "none", "occasional", "none", "occasional", "occasional", 
+    "occasional", "regular", "occasional", "regular", "regular", 
+    "regular", "occasional", "occasional", "none", "none", "regular", 
+    "occasional", "occasional", "none", "none", "none", "none", 
+    "occasional", "regular", "regular", "none", "regular", "occasional", 
+    "occasional", "none", "occasional", "regular"), income = c(84820L, 
+    81547L, 22588L, 72490L, 74533L, 25338L, 41469L, 57315L, 63629L, 
+    88662L, 62615L, 56261L, 58499L, 82232L, 77584L, 77275L, 38468L, 
+    54510L, 91326L, 78611L, 31402L, 29586L, 21441L, 58269L, 84173L, 
+    88295L, 37940L, 43750L, 69750L, 92356L, 82518L, 91455L, 68866L, 
+    51178L, 68275L, 27689L, 35418L, 81318L, 62405L, 86851L, 25654L, 
+    47553L, 74474L, 51409L, 22607L, 55360L, 96351L, 21516L, 41927L, 
+    55810L), education = c("master", "bachelor", "PhD", "master", 
+    "bachelor", "highschool", "PhD", "highschool", "PhD", "PhD", 
+    "bachelor", "highschool", "master", "bachelor", "PhD", "PhD", 
+    "PhD", "bachelor", "master", "highschool", "PhD", "highschool", 
+    "bachelor", "master", "highschool", "highschool", "master", 
+    "master", "bachelor", "PhD", "highschool", "PhD", "master", 
+    "master", "master", "PhD", "highschool", "master", "master", 
+    "highschool", "bachelor", "highschool", "bachelor", "PhD", 
+    "bachelor", "highschool", "master", "highschool", "bachelor", 
+    "bachelor"), region = c("North", "South", "North", "West", 
+    "North", "West", "South", "South", "West", "South", "West", 
+    "South", "West", "East", "North", "West", "North", "North", 
+    "West", "North", "East", "West", "South", "North", "North", 
+    "East", "East", "North", "North", "West", "South", "West", 
+    "West", "East", "West", "North", "West", "North", "East", 
+    "North", "West", "South", "South", "East", "North", "West", 
+    "West", "East", "North", "East"), marital_status = c("divorced", 
+    "single", "divorced", "divorced", "divorced", "divorced", 
+    "divorced", "married", "divorced", "married", "divorced", 
+    "widowed", "married", "single", "widowed", "widowed", "single", 
+    "divorced", "widowed", "widowed", "single", "married", "single", 
+    "married", "widowed", "married", "single", "single", "widowed", 
+    "married", "widowed", "divorced", "single", "married", "single", 
+    "widowed", "widowed", "married", "widowed", "divorced", "married", 
+    "married", "divorced", "single", "married", "widowed", "divorced", 
+    "divorced", "single", "divorced")), row.names = c(NA, -50L
+), class = c("tbl_df", "tbl", "data.frame"))
+
+colSums(is.na(df)) # missing entries (i.e. 'NA')
+```
+
+```{r}
+#| echo: True
+# Question 7
+# Check for inconsistiences in dataset, done by checking each variable individually and what types of values/catagories etc it should have, if not, implies inconsistent 
+
+
+check_missing <- function(x) sum(is.na(x))
+
+check_cat <- function(x, allowed) {
+  x2 <- x[!is.na(x)]
+  bad <- setdiff(unique(x2), allowed)
+  list(
+    n_inconsistent = length(bad),
+    inconsistent_values = bad
+  )
+}
+
+check_integer <- function(x) {
+  x2 <- x[!is.na(x)]
+  # integer-ness check (works even if stored as numeric)
+  bad <- x2[abs(x2 - round(x2)) > 1e-9]
+  list(
+    n_non_integer = length(bad),
+    example_values = unique(bad)
+  )
+}
+
+check_numeric <- function(x) {
+  list(
+    is_numeric = is.numeric(x),
+    n_missing = sum(is.na(x))
+  )
+}
+
+# 1) id: should be unique
+list(
+  n_missing = check_missing(df$id),
+  n_duplicates = sum(duplicated(df$id[!is.na(df$id)])),
+  duplicate_values = unique(df$id[!is.na(df$id) & duplicated(df$id)])
+)
+
+# 2) age: should be integer
+list(
+  n_missing = check_missing(df$age),
+  check_integer(df$age)
+)
+
+# 3) gender: should be only male/female
+list(
+  n_missing = check_missing(df$gender),
+  check_cat(df$gender, c("male", "female"))
+)
+
+# 4) height: numeric (missing values are fine to detect)
+list(
+  n_missing = check_missing(df$height),
+  is_numeric = is.numeric(df$height)
+)
+
+# 5) blood_type: 
+list(
+  n_missing = check_missing(df$blood_type),
+  check_cat(df$blood_type, c("A", "B", "AB", "O"))
+)
+
+# 6) disease_status: 
+list(
+  n_missing = check_missing(df$disease_status),
+  check_cat(df$disease_status, c("healthy", "diseased"))
+)
+
+# case sensitive
+list(
+  n_missing = check_missing(df$disease_status),
+  check_cat(tolower(df$disease_status), c("healthy", "diseased"))
+)
+
+# 7) smoker:
+list(
+  n_missing = check_missing(df$smoker),
+  check_cat(df$smoker, c("yes", "no"))
+)
+
+# 8) exercise: 
+list(
+  n_missing = check_missing(df$exercise),
+  check_cat(df$exercise, c("none", "occasional", "regular"))
+)
+
+# 9) income: should be integer
+list(
+  n_missing = check_missing(df$income),
+  check_integer(df$income)
+)
+
+# 10) region:
+list(
+  n_missing = check_missing(df$region),
+  check_cat(df$region, c("North", "South", "East", "West"))
+)
+
+# 11) marital_status:
+list(
+  n_missing = check_missing(df$marital_status),
+  check_cat(df$marital_status, c("single", "married", "divorced", "widowed"))
+)
+```
